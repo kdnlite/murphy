@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Murphy</title>
+<style>
+  :root{
+    --bg:#0f1115; --bg2:#161a21; --panel:#1b2029; --line:#262c36;
+    --text:#e8ebf0; --muted:#9aa4b2; --accent:#d9a441; --accent2:#f0c46a;
+    --user:#232a34; --murphy:#14181f; --danger:#e5534b; --ok:#54b981;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex; flex-direction:column; height:100dvh;
+  }
+  header{
+    display:flex; align-items:center; gap:12px; padding:12px 16px;
+    border-bottom:1px solid var(--line); background:var(--bg2);
+    position:sticky; top:0; z-index:5;
+  }
+  .logo{
+    width:34px; height:34px; border-radius:10px; flex:0 0 auto;
+    background:radial-gradient(120% 120% at 30% 20%, var(--accent2), var(--accent));
+    color:#1a1205; font-weight:800; display:grid; place-items:center; font-size:18px;
+  }
+  .title{display:flex; flex-direction:column; line-height:1.1}
+  .title b{font-size:16px; letter-spacing:.2px}
+  .title small{color:var(--muted); font-size:11px}
+  .status{margin-left:auto; display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted)}
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--muted)}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--danger)}
+  .iconbtn{
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    width:34px; height:34px; border-radius:10px; cursor:pointer; font-size:15px;
+  }
+  .iconbtn:hover{color:var(--text); border-color:#3a434f}
+
+  main{flex:1; overflow-y:auto; padding:20px 0}
+  .wrap{max-width:760px; margin:0 auto; padding:0 16px}
+  .msg{display:flex; gap:12px; margin:0 0 18px}
+  .avatar{width:30px; height:30px; border-radius:9px; flex:0 0 auto; display:grid; place-items:center; font-size:13px; font-weight:700}
+  .avatar.u{background:var(--user); color:var(--muted)}
+  .avatar.m{background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#1a1205}
+  .bubble{padding:11px 14px; border-radius:var(--radius); line-height:1.55; font-size:15px; white-space:pre-wrap; word-wrap:break-word}
+  .msg.u .bubble{background:var(--user)}
+  .msg.m .bubble{background:var(--murphy); border:1px solid var(--line)}
+  .msg .who{font-size:11px; color:var(--muted); margin:0 0 4px}
+  .col{display:flex; flex-direction:column; min-width:0}
+  .cursor::after{content:"▋"; color:var(--accent); animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .empty{max-width:620px; margin:8vh auto; text-align:center; color:var(--muted); padding:0 16px}
+  .empty h1{color:var(--text); font-size:26px; margin:0 0 8px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:18px}
+  .chip{border:1px solid var(--line); background:var(--panel); color:var(--text); padding:9px 13px; border-radius:999px; cursor:pointer; font-size:13px}
+  .chip:hover{border-color:var(--accent)}
+
+  footer{border-top:1px solid var(--line); background:var(--bg2); padding:12px 0}
+  .composer{max-width:760px; margin:0 auto; padding:0 16px; display:flex; gap:10px; align-items:flex-end}
+  textarea{
+    flex:1; resize:none; background:var(--panel); color:var(--text); border:1px solid var(--line);
+    border-radius:14px; padding:12px 14px; font:inherit; font-size:15px; max-height:180px; min-height:48px; line-height:1.4;
+  }
+  textarea:focus{outline:none; border-color:var(--accent)}
+  .send{
+    width:48px; height:48px; flex:0 0 auto; border:none; border-radius:14px; cursor:pointer;
+    background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#1a1205; font-size:20px; font-weight:700;
+  }
+  .send:disabled{opacity:.45; cursor:default}
+  .hint{max-width:760px; margin:6px auto 0; padding:0 16px; color:var(--muted); font-size:11px; text-align:center}
+
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; place-items:center; z-index:20}
+  .modal.open{display:grid}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:16px; width:min(440px,92vw); padding:20px}
+  .card h3{margin:0 0 14px}
+  .field{margin:0 0 12px}
+  .field label{display:block; font-size:12px; color:var(--muted); margin:0 0 5px}
+  .field input{width:100%; background:var(--bg2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:10px 12px; font:inherit}
+  .row{display:flex; gap:10px; justify-content:flex-end; margin-top:16px}
+  .btn{border:1px solid var(--line); background:var(--bg2); color:var(--text); padding:9px 16px; border-radius:10px; cursor:pointer; font:inherit}
+  .btn.primary{background:linear-gradient(135deg,var(--accent2),var(--accent)); color:#1a1205; border:none; font-weight:700}
+  .banner{display:none; background:rgba(229,83,75,.12); border:1px solid rgba(229,83,75,.4); color:#f3b0ab; font-size:13px; padding:10px 14px; border-radius:12px; margin:0 auto 14px; max-width:728px}
+  .banner.show{display:block}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">M</div>
+  <div class="title"><b>Murphy</b><small>KDN ka apna AI</small></div>
+  <div class="status"><span class="dot" id="dot"></span><span id="statusText">jaanch raha hoon…</span></div>
+  <button class="iconbtn" id="newBtn" title="Nayi baat">✚</button>
+  <button class="iconbtn" id="setBtn" title="Settings">⚙</button>
+</header>
+
+<main id="main">
+  <div class="wrap" id="wrap">
+    <div class="banner" id="banner"></div>
+    <div class="empty" id="empty">
+      <div class="logo" style="width:56px;height:56px;border-radius:16px;font-size:28px;margin:0 auto 14px">M</div>
+      <h1>Namaste! Main Murphy hoon.</h1>
+      <div>KDN ka apna AI assistant. Kuch bhi poochho — Hindi, Hinglish ya English mein.</div>
+      <div class="chips" id="chips">
+        <div class="chip">WiFi router kya kaam karta hai?</div>
+        <div class="chip">Mujhe networking samjhao, basic se</div>
+        <div class="chip">IP address kya hota hai?</div>
+        <div class="chip">Ek chhoti kahani sunao</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="composer">
+    <textarea id="input" placeholder="Murphy se kuch poochho…" rows="1"></textarea>
+    <button class="send" id="send" title="Bhejo">➤</button>
+  </div>
+  <div class="hint">Enter = bhejo · Shift+Enter = nayi line · Murphy aapke computer par chal raha hai</div>
+</footer>
+
+<div class="modal" id="modal">
+  <div class="card">
+    <h3>Settings</h3>
+    <div class="field">
+      <label>Ollama ka pata (host)</label>
+      <input id="hostInput" placeholder="http://127.0.0.1:11434" />
+    </div>
+    <div class="field">
+      <label>Model ka naam</label>
+      <input id="modelInput" placeholder="murphy" />
+    </div>
+    <div class="row">
+      <button class="btn" id="cancelSet">Cancel</button>
+      <button class="btn primary" id="saveSet">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS = { host: "http://127.0.0.1:11434", model: "murphy" };
+const cfg = loadCfg();
+let messages = [];      // {role, content}
+let streaming = false;
+
+const $ = s => document.querySelector(s);
+const wrap = $("#wrap"), main = $("#main"), input = $("#input"), sendBtn = $("#send");
+const dot = $("#dot"), statusText = $("#statusText"), empty = $("#empty"), banner = $("#banner");
+
+function loadCfg(){
+  let c = {...DEFAULTS};
+  try { const s = JSON.parse(localStorage.getItem("murphyCfg")||"{}"); c = {...c, ...s}; } catch(e){}
+  return c;
+}
+function saveCfg(){ try { localStorage.setItem("murphyCfg", JSON.stringify(cfg)); } catch(e){} }
+
+// ---- connection check ----
+async function checkConn(){
+  try{
+    const r = await fetch(cfg.host.replace(/\/$/,"") + "/api/tags");
+    if(!r.ok) throw new Error();
+    const j = await r.json();
+    const names = (j.models||[]).map(m=>m.name);
+    const has = names.some(n => n===cfg.model || n.startsWith(cfg.model+":"));
+    dot.className = "dot ok";
+    statusText.textContent = "chalu";
+    if(!has){
+      showBanner("Ollama chalu hai, par '"+cfg.model+"' naam ka model nahi mila. Settings (⚙) mein sahi naam daalo, ya setup_murphy.command chalao.");
+    } else hideBanner();
+  }catch(e){
+    dot.className = "dot bad";
+    statusText.textContent = "band";
+    showBanner("Murphy se connection nahi hua. Pakka karo ki Ollama app khula hai (menu bar mein 🦙). Phir ye page refresh karo.");
+  }
+}
+function showBanner(t){ banner.textContent = t; banner.classList.add("show"); }
+function hideBanner(){ banner.classList.remove("show"); }
+
+// ---- rendering ----
+function addMsg(role, text){
+  empty.style.display = "none";
+  const who = role==="user" ? "Tum" : "Murphy";
+  const el = document.createElement("div");
+  el.className = "msg " + (role==="user" ? "u" : "m");
+  el.innerHTML = `<div class="avatar ${role==="user"?"u":"m"}">${role==="user"?"T":"M"}</div>
+    <div class="col"><div class="who">${who}</div><div class="bubble"></div></div>`;
+  el.querySelector(".bubble").textContent = text;
+  wrap.appendChild(el);
+  scrollDown();
+  return el.querySelector(".bubble");
+}
+function scrollDown(){ main.scrollTop = main.scrollHeight; }
+
+// ---- send ----
+async function send(){
+  const text = input.value.trim();
+  if(!text || streaming) return;
+  input.value = ""; autoGrow();
+  addMsg("user", text);
+  messages.push({role:"user", content:text});
+
+  streaming = true; sendBtn.disabled = true;
+  const bubble = addMsg("assistant", "");
+  bubble.classList.add("cursor");
+  let acc = "";
+
+  try{
+    const r = await fetch(cfg.host.replace(/\/$/,"") + "/api/chat", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ model: cfg.model, stream:true, messages })
+    });
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while(true){
+      const {value, done} = await reader.read();
+      if(done) break;
+      buf += dec.decode(value, {stream:true});
+      let nl;
+      while((nl = buf.indexOf("\n")) >= 0){
+        const line = buf.slice(0,nl).trim(); buf = buf.slice(nl+1);
+        if(!line) continue;
+        try{
+          const j = JSON.parse(line);
+          if(j.message && j.message.content){ acc += j.message.content; bubble.textContent = acc; scrollDown(); }
+        }catch(e){}
+      }
+    }
+    messages.push({role:"assistant", content:acc});
+    hideBanner();
+  }catch(e){
+    bubble.textContent = acc || "Connection toot gaya. Ollama app khula hai na? Phir dobara bhejo.";
+    showBanner("Jawaab beech mein ruk gaya. Ollama app (🦙) check karo.");
+  }finally{
+    bubble.classList.remove("cursor");
+    streaming = false; sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+// ---- ui wiring ----
+function autoGrow(){ input.style.height="auto"; input.style.height=Math.min(input.scrollHeight,180)+"px"; }
+input.addEventListener("input", autoGrow);
+input.addEventListener("keydown", e=>{
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); }
+});
+sendBtn.addEventListener("click", send);
+$("#chips").addEventListener("click", e=>{
+  if(e.target.classList.contains("chip")){ input.value = e.target.textContent; autoGrow(); send(); }
+});
+$("#newBtn").addEventListener("click", ()=>{
+  if(streaming) return;
+  messages = [];
+  wrap.querySelectorAll(".msg").forEach(n=>n.remove());
+  empty.style.display = "";
+  input.focus();
+});
+
+// settings modal
+const modal = $("#modal"), hostInput = $("#hostInput"), modelInput = $("#modelInput");
+$("#setBtn").addEventListener("click", ()=>{
+  hostInput.value = cfg.host; modelInput.value = cfg.model; modal.classList.add("open");
+});
+$("#cancelSet").addEventListener("click", ()=> modal.classList.remove("open"));
+$("#saveSet").addEventListener("click", ()=>{
+  cfg.host = (hostInput.value.trim() || DEFAULTS.host);
+  cfg.model = (modelInput.value.trim() || DEFAULTS.model);
+  saveCfg(); modal.classList.remove("open"); checkConn();
+});
+modal.addEventListener("click", e=>{ if(e.target===modal) modal.classList.remove("open"); });
+
+checkConn();
+input.focus();
+</script>
+</body>
+</html>
