@@ -127,7 +127,7 @@
     <h3>Settings</h3>
     <div class="field">
       <label>Ollama ka pata (host)</label>
-      <input id="hostInput" placeholder="http://127.0.0.1:11434" />
+      <input id="hostInput" placeholder="(khaali = isi server se)" />
     </div>
     <div class="field">
       <label>Model ka naam</label>
@@ -141,7 +141,7 @@
 </div>
 
 <script>
-const DEFAULTS = { host: "http://127.0.0.1:11434", model: "murphy" };
+const DEFAULTS = { host: "", model: "murphy" };
 const cfg = loadCfg();
 let messages = [];      // {role, content}
 let streaming = false;
